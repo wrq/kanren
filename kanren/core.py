@@ -2,6 +2,7 @@ from collections.abc import Sequence
 from functools import partial, reduce
 from itertools import tee
 from operator import length_hint
+import more_itertools as miter
 from typing import (
     Any,
     Callable,
@@ -15,7 +16,7 @@ from typing import (
 )
 
 from cons.core import ConsPair
-from toolz import interleave, take
+from toolz import take
 from typing_extensions import Literal
 from unification import isvar, reify, unify
 from unification.core import isground
@@ -68,7 +69,7 @@ def ldisj_seq(goals: Iterable[GoalType]) -> GoalType:
 
         goals, _goals = tee(goals)
 
-        yield from interleave(g(S) for g in _goals)
+        yield from miter.interleave_longest(g(S) for g in _goals)
 
     return ldisj_seq_goal
 
@@ -77,7 +78,7 @@ def bind(z: StateStreamType, g: GoalType) -> StateStreamType:
     """Apply a goal to a state stream and then combine the resulting state streams."""
     # We could also use `chain`, but `interleave` preserves the old behavior.
     # return chain.from_iterable(map(g, z))
-    return cast(StateStreamType, interleave(map(g, z)))
+    return cast(StateStreamType, miter.interleave_longest(map(g, z)))
 
 
 def lconj_seq(goals: Iterable[GoalType]) -> GoalType:
